@@ -10,7 +10,18 @@ permissions:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            artifact: controlapi-mcp-linux
+          - os: macos-latest
+            platform: macos
+            artifact: controlapi-mcp-macos
+    
+    runs-on: ${{ matrix.os }}
     
     steps:
       - name: Checkout code
@@ -31,28 +42,44 @@ jobs:
           chmod +x build.sh
           ./build.sh
       
+      - name: Rename binary with platform suffix
+        run: mv dist/controlapi-mcp dist/${{ matrix.artifact }}
+      
       - name: Get version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       
-      - name: Determine platform
-        id: platform
-        run: |
-          if [ "${{ runner.os }}" == "Linux" ]; then
-            echo "PLATFORM=Linux x86_64" >> $GITHUB_OUTPUT
-          elif [ "${{ runner.os }}" == "macOS" ]; then
-            echo "PLATFORM=macOS" >> $GITHUB_OUTPUT
-          elif [ "${{ runner.os }}" == "Windows" ]; then
-            echo "PLATFORM=Windows x86_64" >> $GITHUB_OUTPUT
-          fi
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+  
+  create-release:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
       
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "ControlAPI-MCP ${{ steps.get_version.outputs.VERSION }} - Release (${{ steps.platform.outputs.PLATFORM }})"
+          name: "ControlAPI-MCP ${{ steps.get_version.outputs.VERSION }}"
           body_path: RELEASE_${{ steps.get_version.outputs.VERSION }}.md
           files: |
-            dist/controlapi-mcp
+            dist/controlapi-mcp-linux/controlapi-mcp-linux
+            dist/controlapi-mcp-macos/controlapi-mcp-macos
           draft: false
           prerelease: false
         env:

@@ -4,8 +4,27 @@
 REPO="fellowabhi/ControlAPI-openapi-to-mcp"
 BINARY_NAME="controlapi-mcp"
 INSTALL_DIR="${HOME}/.local/bin/controlapi-mcp"
-BINARY_PATH="${INSTALL_DIR}/${BINARY_NAME}"
 VERSION_FILE="${INSTALL_DIR}/.version"
+
+# Detect OS and set binary name
+OS="$(uname -s)"
+case "$OS" in
+    Linux*)
+        PLATFORM="linux"
+        BINARY_FILENAME="controlapi-mcp-linux"
+        ;;
+    Darwin*)
+        PLATFORM="macos"
+        BINARY_FILENAME="controlapi-mcp-macos"
+        ;;
+    *)
+        echo "❌ Unsupported operating system: $OS"
+        echo "Supported: Linux, macOS"
+        exit 1
+        ;;
+esac
+
+BINARY_PATH="${INSTALL_DIR}/${BINARY_NAME}"
 
 # Create install directory if it doesn't exist
 mkdir -p "$INSTALL_DIR"
@@ -20,7 +39,7 @@ get_latest_version() {
 # Function to get latest release download URL
 get_latest_release_url() {
     curl -s "https://api.github.com/repos/${REPO}/releases/latest" \
-        | grep "browser_download_url.*${BINARY_NAME}" \
+        | grep "browser_download_url.*${BINARY_FILENAME}" \
         | cut -d '"' -f 4
 }
 
@@ -49,10 +68,12 @@ if [ "$NEEDS_DOWNLOAD" = true ]; then
     DOWNLOAD_URL=$(get_latest_release_url)
     
     if [ -z "$DOWNLOAD_URL" ]; then
-        echo "❌ Error: Could not find release download URL"
+        echo "❌ Error: Could not find release download URL for $PLATFORM"
         echo "Please check: https://github.com/${REPO}/releases"
         exit 1
     fi
+    
+    echo "🖥️  Detected platform: $PLATFORM"
     
     # Download to temporary file first (to avoid "text file busy" error)
     TEMP_PATH="${BINARY_PATH}.tmp"

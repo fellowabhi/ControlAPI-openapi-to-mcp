@@ -6,6 +6,8 @@ MCP server that exposes any OpenAPI/REST API as MCP tools with dynamic server sw
 
 Click to install directly in your editor - **no configuration needed!**
 
+**Linux / macOS:**
+
 **[📥 Install in VS Code](https://vscode.dev/redirect/mcp/install?name=controlapi-mcp&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22bash%22%2C%22args%22%3A%5B%22-c%22%2C%22mkdir%20-p%20~/.local/bin/controlapi-mcp%20%26%26%20curl%20-fsSL%20https%3A//raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh%20-o%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20chmod%20%2Bx%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20~/.local/bin/controlapi-mcp/auto-run.sh%22%5D%7D)**
 
 **[📥 Install in VS Code Insiders](https://insiders.vscode.dev/redirect/mcp/install?name=controlapi-mcp&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22bash%22%2C%22args%22%3A%5B%22-c%22%2C%22mkdir%20-p%20~/.local/bin/controlapi-mcp%20%26%26%20curl%20-fsSL%20https%3A//raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh%20-o%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20chmod%20%2Bx%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20~/.local/bin/controlapi-mcp/auto-run.sh%22%5D%7D)**
@@ -103,6 +105,11 @@ Creates a standalone executable at `dist/controlapi-mcp` (16MB)
 > 💡 **No Configuration Needed:** You can start with no environment variables and configure the server dynamically using the `set_server_config` tool. The AI assistant will guide you through the setup.
 
 ## Features
+
+### Cross-Platform Support
+- **Linux** (x86_64) - Full support
+- **macOS** (Intel & Apple Silicon) - Full support
+- **Windows** - Use Python or WSL
 
 ### Dynamic Server Switching
 - Connect to any OpenAPI server at runtime
