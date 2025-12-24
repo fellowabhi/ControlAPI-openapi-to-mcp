@@ -4,6 +4,7 @@ import time
 import httpx
 
 from variable_manager import VariableManager
+from context_manager import ContextManager
 
 
 @dataclass
@@ -15,9 +16,10 @@ class Response:
 
 
 class RequestExecutor:
-    def __init__(self, variable_manager: VariableManager, base_url: str):
+    def __init__(self, variable_manager: VariableManager, base_url: str, context: Optional[ContextManager] = None):
         self.var_manager = variable_manager
         self.base_url = base_url.rstrip("/")
+        self.context = context
 
     def execute(
         self,
@@ -40,6 +42,10 @@ class RequestExecutor:
         headers, body, path = self.var_manager.apply_to_request(headers, body, path)
 
         url = f"{self.base_url}{path}"
+        
+        # Record request in context
+        if self.context:
+            self.context.record_request(method.upper(), path)
         
         start = time.perf_counter()
         try:

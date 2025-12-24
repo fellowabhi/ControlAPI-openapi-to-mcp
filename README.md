@@ -1,24 +1,16 @@
 # ControlAPI-MCP
 
-MCP server that exposes any OpenAPI/REST API as MCP tools with variable substitution.
+MCP server that exposes any OpenAPI/REST API as MCP tools with dynamic server switching and variable substitution.
 
 ## 🚀 One-Click Install
 
-Click to install directly in your editor:
+Click to install directly in your editor - **no configuration needed!**
 
-**[📥 Install in VS Code](https://vscode.dev/redirect/mcp/install?name=controlapi-mcp&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22bash%22%2C%22args%22%3A%5B%22-c%22%2C%22mkdir%20-p%20~/.local/bin/controlapi-mcp%20%26%26%20curl%20-fsSL%20https%3A//raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh%20-o%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20chmod%20%2Bx%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20~/.local/bin/controlapi-mcp/auto-run.sh%22%5D%2C%22env%22%3A%7B%22OPENAPI_URL%22%3A%22http%3A//your-api.com/openapi.json%22%2C%22BASE_URL%22%3A%22http%3A//your-api.com%22%7D%7D)**
+**[📥 Install in VS Code](https://vscode.dev/redirect/mcp/install?name=controlapi-mcp&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22bash%22%2C%22args%22%3A%5B%22-c%22%2C%22mkdir%20-p%20~/.local/bin/controlapi-mcp%20%26%26%20curl%20-fsSL%20https%3A//raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh%20-o%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20chmod%20%2Bx%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20~/.local/bin/controlapi-mcp/auto-run.sh%22%5D%7D)**
 
-**[📥 Install in VS Code Insiders](https://insiders.vscode.dev/redirect/mcp/install?name=controlapi-mcp&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22bash%22%2C%22args%22%3A%5B%22-c%22%2C%22mkdir%20-p%20~/.local/bin/controlapi-mcp%20%26%26%20curl%20-fsSL%20https%3A//raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh%20-o%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20chmod%20%2Bx%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20~/.local/bin/controlapi-mcp/auto-run.sh%22%5D%2C%22env%22%3A%7B%22OPENAPI_URL%22%3A%22http%3A//your-api.com/openapi.json%22%2C%22BASE_URL%22%3A%22http%3A//your-api.com%22%7D%7D)**
+**[📥 Install in VS Code Insiders](https://insiders.vscode.dev/redirect/mcp/install?name=controlapi-mcp&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22bash%22%2C%22args%22%3A%5B%22-c%22%2C%22mkdir%20-p%20~/.local/bin/controlapi-mcp%20%26%26%20curl%20-fsSL%20https%3A//raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh%20-o%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20chmod%20%2Bx%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20~/.local/bin/controlapi-mcp/auto-run.sh%22%5D%7D)**
 
-> 💡 **Installation Tip:** When VS Code prompts you, choose **"Install in Workspace"** instead of globally. This allows you to configure different `OPENAPI_URL` and `BASE_URL` for each project in your workspace's `.vscode/mcp.json` file.
-
-> ⚠️ **After Installation:** Update the environment variables in `.vscode/mcp.json` to point to your specific API, for example:
-> ```json
-> "env": {
->   "OPENAPI_URL": "http://localhost:8000/openapi.json",
->   "BASE_URL": "http://localhost:8000"
-> }
-> ```
+> 💡 **After Installation:** The AI assistant will guide you to connect to an API server. Simply provide the OpenAPI URL when asked, or use the `set_server_config` tool to connect to your API.
 
 ## Quick Start (Auto-Download)
 
@@ -30,23 +22,19 @@ curl -O https://raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/m
 chmod +x auto-run.sh
 ```
 
-2. Use it in your MCP config - it will auto-download the binary on first run:
+2. Use it in your MCP config:
 ```json
 {
   "servers": {
     "controlapi-mcp": {
       "type": "stdio",
-      "command": "/path/to/auto-run.sh",
-      "env": {
-        "OPENAPI_URL": "http://your-api.com/openapi.json",
-        "BASE_URL": "http://your-api.com"
-      }
+      "command": "/path/to/auto-run.sh"
     }
   }
 }
 ```
 
-## Quick Start (Manual Binary)
+> Note: You can optionally set `OPENAPI_URL`, `BASE_URL`, and `SERVER_NICKNAME` in env vars, or configure dynamically using the `set_server_config` tool.
 
 Download from [releases](https://github.com/fellowabhi/ControlAPI-openapi-to-mcp/releases) or build:
 
@@ -110,16 +98,30 @@ Creates a standalone executable at `dist/controlapi-mcp` (16MB)
 }
 ```
 
-**Required:** `OPENAPI_URL`, `PYTHONPATH`  
-**Optional:** `REFRESH_INTERVAL` (default: 300), `BASE_URL` (overrides OpenAPI spec servers)
+**Optional:** `OPENAPI_URL`, `BASE_URL`, `SERVER_NICKNAME`
 
-## Tools
+> 💡 **No Configuration Needed:** You can start with no environment variables and configure the server dynamically using the `set_server_config` tool. The AI assistant will guide you through the setup.
 
+## Features
+
+### Dynamic Server Switching
+- Connect to any OpenAPI server at runtime
+- Switch between multiple APIs (dev, staging, production)
+- Server context tracking with history
+- Automatic schema reloading
+
+### Available Tools
+
+- `set_server_config` - Connect to an OpenAPI server (use this first if not configured)
+- `get_server_info` - Check current server and connection status
+- `get_server_history` - View recent server switches
+- `health_check` - Test server connectivity
 - `list_endpoints` - List all API endpoints
 - `search_schema` - Search endpoints by keyword
-- `execute_request` - Make HTTP requests
+- `execute_request` - Make HTTP requests with variable substitution
 - `set_variable` - Store variable (e.g., auth token)
 - `get_variables` - View all stored variables
+- `reload_schema` - Reload current server's schema
 
 ## Variable Substitution
 
@@ -135,6 +137,8 @@ Use `{{variable_name}}` in headers, body, or path:
 
 ## Example Workflow
 
-1. `execute_request` to `/auth/login` → get token
-2. `set_variable` key="token" value="Bearer xyz..."
-3. `execute_request` with `Authorization: {{token}}`
+1. **First time:** `set_server_config` with openapi_url
+2. `execute_request` to `/auth/login` → get token
+3. `set_variable` key="token" value="Bearer xyz..."
+4. `execute_request` with `Authorization: {{token}}`
+5. **Switch servers:** `set_server_config` to test on different environment

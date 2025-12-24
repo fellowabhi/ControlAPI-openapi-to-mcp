@@ -9,12 +9,6 @@ if [ ! -d ".venv" ]; then
     exit 1
 fi
 
-if [ -z "$OPENAPI_URL" ]; then
-    echo "Error: OPENAPI_URL environment variable is required"
-    echo "Usage: OPENAPI_URL=http://localhost:8000/openapi.json ./run.sh"
-    exit 1
-fi
+export PYTHONPATH="$SCRIPT_DIR/src:$SCRIPT_DIR"
 
-export PYTHONPATH="$SCRIPT_DIR"
-
-.venv/bin/python -m src.main
+.venv/bin/python -m main

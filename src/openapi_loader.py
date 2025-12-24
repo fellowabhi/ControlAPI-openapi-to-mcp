@@ -40,6 +40,15 @@ class OpenAPILoader:
 
     def reload(self) -> dict:
         return self.load()
+    
+    def reload_with_url(self, new_url: str) -> dict:
+        """Change URL and reload schema."""
+        self.url = new_url
+        self.spec = {}
+        self.base_url = ""
+        self.loaded = False
+        self.load_error = ""
+        return self.load()
 
     def get_endpoints(self) -> List[Endpoint]:
         endpoints = []

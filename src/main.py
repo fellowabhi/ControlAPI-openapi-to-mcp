@@ -6,18 +6,18 @@ from mcp.server.stdio import stdio_server
 from openapi_loader import OpenAPILoader
 from variable_manager import VariableManager
 from request_executor import RequestExecutor
+from context_manager import ContextManager
 from tools import register_tools
 
 
 def load_config() -> dict:
-    openapi_url = os.getenv("OPENAPI_URL")
-    if not openapi_url:
-        raise ValueError("OPENAPI_URL environment variable is required")
+    openapi_url = os.getenv("OPENAPI_URL", "")
     
     return {
         "openapi_url": openapi_url,
         "refresh_interval": int(os.getenv("REFRESH_INTERVAL", "300")),
-        "base_url": os.getenv("BASE_URL", "")
+        "base_url": os.getenv("BASE_URL", ""),
+        "server_nickname": os.getenv("SERVER_NICKNAME", "")
     }
 
 
@@ -34,16 +34,40 @@ def extract_base_url(openapi_url: str, loader_base_url: str, config_base_url: st
 async def main():
     config = load_config()
     
-    loader = OpenAPILoader(config["openapi_url"])
-    loader.load()  # Try to load, but don't fail if it doesn't work
+    # Initialize context manager with optional URL
+    has_initial_config = bool(config["openapi_url"])
     
-    base_url = extract_base_url(config["openapi_url"], loader.base_url, config["base_url"])
+    context = ContextManager(
+        openapi_url=config["openapi_url"] or "not-configured",
+        base_url=config["base_url"] or None,
+        nickname=config["server_nickname"] or None
+    )
+    
+    # Only load if URL is configured
+    if has_initial_config:
+        loader = OpenAPILoader(config["openapi_url"])
+        loader.load()
+        
+        # Update context with load results
+        context.update_load_status(
+            is_loaded=loader.loaded,
+            endpoint_count=len(loader.get_endpoints()) if loader.loaded else 0,
+            load_error=loader.load_error if not loader.loaded else None
+        )
+        
+        base_url = extract_base_url(config["openapi_url"], loader.base_url, config["base_url"])
+    else:
+        # No initial config - start with empty loader
+        loader = OpenAPILoader("not-configured")
+        loader.loaded = False
+        loader.load_error = "No server configured. Use set_server_config to connect to an API."
+        base_url = "http://localhost:8000"
     
     var_manager = VariableManager()
-    executor = RequestExecutor(var_manager, base_url)
+    executor = RequestExecutor(var_manager, base_url, context)
     
     server = Server("openapi-mcp")
-    register_tools(server, loader, executor, var_manager)
+    register_tools(server, loader, executor, var_manager, context)
     
     async with stdio_server() as streams:
         await server.run(
