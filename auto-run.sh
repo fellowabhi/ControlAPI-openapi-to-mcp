@@ -54,13 +54,17 @@ if [ "$NEEDS_DOWNLOAD" = true ]; then
         exit 1
     fi
     
-    # Download the binary
-    if curl -L -o "$BINARY_PATH" "$DOWNLOAD_URL"; then
-        chmod +x "$BINARY_PATH"
+    # Download to temporary file first (to avoid "text file busy" error)
+    TEMP_PATH="${BINARY_PATH}.tmp"
+    
+    if curl -L -o "$TEMP_PATH" "$DOWNLOAD_URL"; then
+        chmod +x "$TEMP_PATH"
+        mv -f "$TEMP_PATH" "$BINARY_PATH"
         echo "$LATEST_VERSION" > "$VERSION_FILE"
         echo "✅ Downloaded and installed version $LATEST_VERSION"
         echo "📍 Location: $BINARY_PATH"
     else
+        rm -f "$TEMP_PATH"
         echo "❌ Error: Failed to download binary"
         exit 1
     fi
