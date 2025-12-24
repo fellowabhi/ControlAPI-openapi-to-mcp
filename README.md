@@ -10,7 +10,15 @@ Click to install directly in your editor:
 
 **[📥 Install in VS Code Insiders](https://insiders.vscode.dev/redirect/mcp/install?name=controlapi-mcp&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22bash%22%2C%22args%22%3A%5B%22-c%22%2C%22mkdir%20-p%20~/.local/bin/controlapi-mcp%20%26%26%20curl%20-fsSL%20https%3A//raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh%20-o%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20chmod%20%2Bx%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20~/.local/bin/controlapi-mcp/auto-run.sh%22%5D%2C%22env%22%3A%7B%22OPENAPI_URL%22%3A%22http%3A//your-api.com/openapi.json%22%2C%22BASE_URL%22%3A%22http%3A//your-api.com%22%7D%7D)**
 
-> ⚠️ **Note:** After installation, update your environment variables in `.vscode/mcp.json` to point to your OpenAPI URL.
+> 💡 **Installation Tip:** When VS Code prompts you, choose **"Install in Workspace"** instead of globally. This allows you to configure different `OPENAPI_URL` and `BASE_URL` for each project in your workspace's `.vscode/mcp.json` file.
+
+> ⚠️ **After Installation:** Update the environment variables in `.vscode/mcp.json` to point to your specific API, for example:
+> ```json
+> "env": {
+>   "OPENAPI_URL": "http://localhost:8000/openapi.json",
+>   "BASE_URL": "http://localhost:8000"
+> }
+> ```
 
 ## Quick Start (Auto-Download)
 
