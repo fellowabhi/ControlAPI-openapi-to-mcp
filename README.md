@@ -2,9 +2,35 @@
 
 MCP server that exposes any OpenAPI/REST API as MCP tools with variable substitution.
 
-## Quick Start (Binary)
+## Quick Start (Auto-Download)
 
-Download or build the standalone binary and run it:
+**Zero installation** - automatically downloads and runs the latest release:
+
+1. Download the auto-run script:
+```bash
+curl -O https://raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh
+chmod +x auto-run.sh
+```
+
+2. Use it in your MCP config - it will auto-download the binary on first run:
+```json
+{
+  "servers": {
+    "controlapi-mcp": {
+      "type": "stdio",
+      "command": "/path/to/auto-run.sh",
+      "env": {
+        "OPENAPI_URL": "http://your-api.com/openapi.json",
+        "BASE_URL": "http://your-api.com"
+      }
+    }
+  }
+}
+```
+
+## Quick Start (Manual Binary)
+
+Download from [releases](https://github.com/fellowabhi/ControlAPI-openapi-to-mcp/releases) or build:
 
 ```bash
 export OPENAPI_URL='http://your-api.com/openapi.json'
