@@ -1,6 +1,15 @@
-# Control API MCP Server
+# ControlAPI-MCP
 
 MCP server that exposes any OpenAPI/REST API as MCP tools with variable substitution.
+
+## 🚀 One-Click Install
+
+Click to install directly in your editor:
+
+[![Install in VS Code](https://img.shields.io/badge/Install-VS%20Code-blue?style=for-the-badge&logo=visual-studio-code)](vscode:mcp/install?%7B%22name%22%3A%22controlapi-mcp%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22bash%22%2C%22args%22%3A%5B%22-c%22%2C%22mkdir%20-p%20~/.local/bin/controlapi-mcp%20%26%26%20curl%20-fsSL%20https%3A//raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh%20-o%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20chmod%20%2Bx%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20~/.local/bin/controlapi-mcp/auto-run.sh%22%5D%2C%22env%22%3A%7B%22OPENAPI_URL%22%3A%22http%3A//your-api.com/openapi.json%22%2C%22BASE_URL%22%3A%22http%3A//your-api.com%22%7D%7D)
+[![Install in VS Code Insiders](https://img.shields.io/badge/Install-VS%20Code%20Insiders-purple?style=for-the-badge&logo=visual-studio-code)](vscode-insiders:mcp/install?%7B%22name%22%3A%22controlapi-mcp%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22bash%22%2C%22args%22%3A%5B%22-c%22%2C%22mkdir%20-p%20~/.local/bin/controlapi-mcp%20%26%26%20curl%20-fsSL%20https%3A//raw.githubusercontent.com/fellowabhi/ControlAPI-openapi-to-mcp/main/auto-run.sh%20-o%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20chmod%20%2Bx%20~/.local/bin/controlapi-mcp/auto-run.sh%20%26%26%20~/.local/bin/controlapi-mcp/auto-run.sh%22%5D%2C%22env%22%3A%7B%22OPENAPI_URL%22%3A%22http%3A//your-api.com/openapi.json%22%2C%22BASE_URL%22%3A%22http%3A//your-api.com%22%7D%7D)
+
+> ⚠️ **Note:** After installation, update your environment variables in `.vscode/mcp.json` to point to your OpenAPI URL.
 
 ## Quick Start (Auto-Download)
 
