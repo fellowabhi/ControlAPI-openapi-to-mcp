@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 import time
 import httpx
+from urllib.parse import urlparse, parse_qs, urlencode
 
 from variable_manager import VariableManager
 from context_manager import ContextManager
@@ -34,6 +35,18 @@ class RequestExecutor:
         query_params = query_params or {}
         path_params = path_params or {}
 
+        # Extract query parameters from path if present
+        if '?' in path:
+            path_part, query_string = path.split('?', 1)
+            # Parse existing query parameters from URL
+            url_params = parse_qs(query_string, keep_blank_values=True)
+            # Flatten single-value lists (parse_qs returns lists)
+            url_params = {k: v[0] if len(v) == 1 else v for k, v in url_params.items()}
+            # Merge with explicit query_params (explicit params take precedence)
+            merged_params = {**url_params, **query_params}
+            query_params = merged_params
+            path = path_part
+        
         # Apply path params
         for key, value in path_params.items():
             path = path.replace(f"{{{key}}}", str(value))
@@ -54,7 +67,7 @@ class RequestExecutor:
                     method=method.upper(),
                     url=url,
                     headers=headers,
-                    params=query_params,
+                    params=query_params if query_params else None,
                     json=body if body else None,
                 )
             elapsed = (time.perf_counter() - start) * 1000
