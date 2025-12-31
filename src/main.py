@@ -9,6 +9,12 @@ from request_executor import RequestExecutor
 from context_manager import ContextManager
 from tools import register_tools
 
+# Remote debugging support
+if os.getenv("MCP_DEBUG") == "1":
+    import debugpy
+    debugpy.listen(("localhost", 5678))
+    print("Debugger listening on port 5678", flush=True)
+
 
 def load_config() -> dict:
     openapi_url = os.getenv("OPENAPI_URL", "")

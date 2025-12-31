@@ -76,7 +76,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: "ControlAPI-MCP ${{ steps.get_version.outputs.VERSION }}"
-          body_path: RELEASE_${{ steps.get_version.outputs.VERSION }}.md
+          body_path: releases/RELEASE_${{ steps.get_version.outputs.VERSION }}.md
           files: |
             dist/controlapi-mcp-linux/controlapi-mcp-linux
             dist/controlapi-mcp-macos/controlapi-mcp-macos

@@ -82,6 +82,18 @@ def register_tools(
                 inputSchema={"type": "object", "properties": {}},
             ),
             Tool(
+                name="get_endpoint_details",
+                description="Get detailed schema information for a specific endpoint including content-types, parameters, and request body schema",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "API path"},
+                        "method": {"type": "string", "description": "HTTP method (GET, POST, etc.)"},
+                    },
+                    "required": ["path", "method"],
+                },
+            ),
+            Tool(
                 name="get_server_info",
                 description="Get current server configuration and status. Use this to check which server you're connected to before making requests.",
                 inputSchema={"type": "object", "properties": {}},
@@ -137,7 +149,12 @@ def register_tools(
             if tag:
                 endpoints = [e for e in endpoints if tag in e.tags]
 
-            result = [{"path": e.path, "method": e.method, "summary": e.summary} for e in endpoints]
+            result = []
+            for e in endpoints:
+                entry = {"path": e.path, "method": e.method, "summary": e.summary}
+                if e.content_types:
+                    entry["content_types"] = e.content_types
+                result.append(entry)
             
             header = f"[Server: {context.get_display_name()}]\n\n"
             return [TextContent(type="text", text=header + json.dumps(result, indent=2))]
@@ -154,6 +171,12 @@ def register_tools(
                     f"Please verify this is the correct server before proceeding.\n\n"
                 )
             
+            # Get preferred content type from schema
+            schema_content_type = loader.get_preferred_content_type(
+                arguments["path"],
+                arguments["method"]
+            )
+            
             response = executor.execute(
                 path=arguments["path"],
                 method=arguments["method"],
@@ -161,6 +184,7 @@ def register_tools(
                 query_params=arguments.get("query_params"),
                 path_params=arguments.get("path_params"),
                 body=arguments.get("body"),
+                schema_content_type=schema_content_type,
             )
             
             # Add server context to response
@@ -182,7 +206,12 @@ def register_tools(
 
         elif name == "search_schema":
             endpoints = loader.search_endpoints(arguments["query"])
-            result = [{"path": e.path, "method": e.method, "summary": e.summary} for e in endpoints]
+            result = []
+            for e in endpoints:
+                entry = {"path": e.path, "method": e.method, "summary": e.summary}
+                if e.content_types:
+                    entry["content_types"] = e.content_types
+                result.append(entry)
             return [TextContent(type="text", text=json.dumps(result, indent=2))]
 
         elif name == "reload_schema":
@@ -191,9 +220,39 @@ def register_tools(
                 endpoint_count = len(loader.get_endpoints())
                 context.update_load_status(is_loaded=True, endpoint_count=endpoint_count)
                 return [TextContent(type="text", text=f"OpenAPI schema reloaded successfully. {endpoint_count} endpoints available.")]
-            else:
-                context.update_load_status(is_loaded=False, load_error=loader.load_error)
-                return [TextContent(type="text", text=f"Failed to reload schema: {loader.load_error}")]
+        
+        elif name == "get_endpoint_details":
+            schema = loader.get_endpoint_schema(arguments["path"], arguments["method"])
+            if not schema:
+                return [TextContent(type="text", text=f"Endpoint {arguments['method']} {arguments['path']} not found")]
+            
+            # Extract key information
+            details = {
+                "path": arguments["path"],
+                "method": arguments["method"].upper(),
+                "summary": schema.get("summary", ""),
+                "description": schema.get("description", ""),
+            }
+            
+            # Add content-types if request body exists
+            request_body = schema.get("requestBody", {})
+            if request_body:
+                content = request_body.get("content", {})
+                details["content_types"] = list(content.keys())
+                details["request_body_required"] = request_body.get("required", False)
+                
+                # Add schema for each content type
+                details["request_schemas"] = {}
+                for ct, ct_schema in content.items():
+                    if "schema" in ct_schema:
+                        details["request_schemas"][ct] = ct_schema["schema"]
+            
+            # Add parameters
+            parameters = schema.get("parameters", [])
+            if parameters:
+                details["parameters"] = parameters
+            
+            return [TextContent(type="text", text=json.dumps(details, indent=2))]
 
         elif name == "get_server_info":
             info = context.get_info()
@@ -246,8 +305,9 @@ def register_tools(
                     f"Use get_server_info to verify the current configuration before making requests."
                 ))]
             else:
-                # Restore old URL on failure
-                loader.reload_with_url(temp_loader_url)
+                # Restore old URL on failure (only if it was a valid URL)
+                if temp_loader_url != "not-configured":
+                    loader.reload_with_url(temp_loader_url)
                 return [TextContent(type="text", text=(
                     f"❌ Failed to load schema from new server\n"
                     f"Error: {loader.load_error}\n"

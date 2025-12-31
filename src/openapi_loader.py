@@ -13,6 +13,7 @@ class Endpoint:
     parameters: dict = field(default_factory=dict)
     request_body: dict = field(default_factory=dict)
     responses: dict = field(default_factory=dict)
+    content_types: List[str] = field(default_factory=list)
 
 
 class OpenAPILoader:
@@ -60,6 +61,13 @@ class OpenAPILoader:
         return endpoints
 
     def _parse_endpoint(self, path: str, method: str, details: dict) -> Endpoint:
+        # Extract content types from request body
+        content_types = []
+        request_body = details.get("requestBody", {})
+        if request_body:
+            content = request_body.get("content", {})
+            content_types = list(content.keys())
+        
         return Endpoint(
             path=path,
             method=method.upper(),
@@ -69,7 +77,29 @@ class OpenAPILoader:
             parameters=details.get("parameters", []),
             request_body=details.get("requestBody", {}),
             responses=details.get("responses", {}),
+            content_types=content_types,
         )
+    
+    def get_preferred_content_type(self, path: str, method: str) -> Optional[str]:
+        """Get the preferred content-type for an endpoint from the OpenAPI schema."""
+        endpoint_schema = self.get_endpoint_schema(path, method)
+        if not endpoint_schema:
+            return None
+        
+        request_body = endpoint_schema.get("requestBody", {})
+        content = request_body.get("content", {})
+        
+        # Return the first content type found (usually there's only one)
+        # Priority: form-urlencoded > json > others
+        if "application/x-www-form-urlencoded" in content:
+            return "application/x-www-form-urlencoded"
+        elif "application/json" in content:
+            return "application/json"
+        elif content:
+            # Return first available content type
+            return next(iter(content.keys()))
+        
+        return None
 
     def get_endpoint_schema(self, path: str, method: str) -> Optional[dict]:
         paths = self.spec.get("paths", {})

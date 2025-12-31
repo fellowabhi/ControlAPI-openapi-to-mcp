@@ -30,6 +30,7 @@ class RequestExecutor:
         query_params: Optional[dict] = None,
         path_params: Optional[dict] = None,
         body: Any = None,
+        schema_content_type: Optional[str] = None,
     ) -> Response:
         headers = headers or {}
         query_params = query_params or {}
@@ -54,6 +55,10 @@ class RequestExecutor:
         # Apply variable substitution
         headers, body, path = self.var_manager.apply_to_request(headers, body, path)
 
+        # Auto-set Content-Type from schema if not provided by user (after variable substitution)
+        if schema_content_type and body and "Content-Type" not in headers and "content-type" not in {k.lower() for k in headers.keys()}:
+            headers["Content-Type"] = schema_content_type
+
         url = f"{self.base_url}{path}"
         
         # Record request in context
@@ -62,14 +67,29 @@ class RequestExecutor:
         
         start = time.perf_counter()
         try:
+            # Determine content type
+            content_type = headers.get("Content-Type", "").lower()
+            use_form = "application/x-www-form-urlencoded" in content_type
+            
             with httpx.Client() as client:
-                resp = client.request(
-                    method=method.upper(),
-                    url=url,
-                    headers=headers,
-                    params=query_params if query_params else None,
-                    json=body if body else None,
-                )
+                if use_form and body:
+                    # Use form encoding
+                    resp = client.request(
+                        method=method.upper(),
+                        url=url,
+                        headers=headers,
+                        params=query_params if query_params else None,
+                        data=body,
+                    )
+                else:
+                    # Use JSON encoding (default)
+                    resp = client.request(
+                        method=method.upper(),
+                        url=url,
+                        headers=headers,
+                        params=query_params if query_params else None,
+                        json=body if body else None,
+                    )
             elapsed = (time.perf_counter() - start) * 1000
 
             try:
