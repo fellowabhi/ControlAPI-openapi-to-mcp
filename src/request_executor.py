@@ -97,17 +97,35 @@ class RequestExecutor:
             except Exception:
                 resp_body = resp.text
 
-            return Response(
+            response = Response(
                 status_code=resp.status_code,
                 headers=dict(resp.headers),
                 body=resp_body,
                 elapsed_ms=round(elapsed, 2),
             )
+            
+            # Log to debug UI
+            try:
+                from debug_server import DebugServer
+                DebugServer.log_request(method.upper(), path, response.status_code, response.elapsed_ms, response.body)
+            except:
+                pass
+            
+            return response
         except Exception as e:
             elapsed = (time.perf_counter() - start) * 1000
-            return Response(
+            response = Response(
                 status_code=0,
                 headers={},
                 body={"error": str(e), "type": type(e).__name__},
                 elapsed_ms=round(elapsed, 2),
             )
+            
+            # Log error to debug UI
+            try:
+                from debug_server import DebugServer
+                DebugServer.log_request(method.upper(), path, 0, response.elapsed_ms, response.body)
+            except:
+                pass
+            
+            return response

@@ -95,7 +95,7 @@ def register_tools(
             ),
             Tool(
                 name="get_server_info",
-                description="Get current server configuration and status. Use this to check which server you're connected to before making requests.",
+                description="Get current server configuration and status. Use this to check which server you're connected to before making requests. Also provides the debug_ui_url where users can view request/response history in a browser.",
                 inputSchema={"type": "object", "properties": {}},
             ),
             Tool(

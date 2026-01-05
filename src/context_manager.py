@@ -37,6 +37,7 @@ class ContextManager:
     """Manages server context and switching history."""
     
     def __init__(self, openapi_url: str, base_url: Optional[str] = None, nickname: Optional[str] = None):
+        self.debug_url: Optional[str] = None
         self.current = ServerContext(
             openapi_url=openapi_url,
             base_url=base_url,
@@ -61,6 +62,7 @@ class ContextManager:
             nickname=nickname,
         )
         self._pending_first_request = True
+        self.debug_url: Optional[str] = None
     
     def update_load_status(self, is_loaded: bool, endpoint_count: int = 0, load_error: Optional[str] = None):
         """Update the load status after schema fetch."""
@@ -81,6 +83,8 @@ class ContextManager:
         """Get current server info."""
         info = self.current.to_dict()
         info["needs_first_request_warning"] = self._pending_first_request
+        if self.debug_url:
+            info["debug_ui_url"] = self.debug_url
         return info
     
     def get_history(self) -> list[dict]:

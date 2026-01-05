@@ -8,6 +8,7 @@ from variable_manager import VariableManager
 from request_executor import RequestExecutor
 from context_manager import ContextManager
 from tools import register_tools
+from debug_server import DebugServer
 
 # Remote debugging support
 if os.getenv("MCP_DEBUG") == "1":
@@ -71,6 +72,11 @@ async def main():
     
     var_manager = VariableManager()
     executor = RequestExecutor(var_manager, base_url, context)
+    
+    # Start debug server
+    debug = DebugServer(var_manager, context)
+    debug_port = debug.start()
+    context.debug_url = f"http://localhost:{debug_port}"
     
     server = Server("openapi-mcp")
     register_tools(server, loader, executor, var_manager, context)
