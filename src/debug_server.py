@@ -78,8 +78,15 @@ class DebugHandler(BaseHTTPRequestHandler):
         .status { font-size: 11px; padding: 2px 8px; border-radius: 3px; }
         .status.ok { background: #4caf50; color: white; }
         .status.error { background: #f44336; color: white; }
-        .req-body { padding: 15px; background: #1e1e1e; border-top: 1px solid #3c3c3c; display: none; }
+        .req-body { padding: 0; background: #1e1e1e; border-top: 1px solid #3c3c3c; display: none; }
         .req-body.show { display: block; }
+        .section { margin: 15px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #2d2d30; border: 1px solid #3c3c3c; border-radius: 4px; cursor: pointer; margin-bottom: 5px; }
+        .section-header:hover { background: #37373d; }
+        .section-title { font-size: 12px; font-weight: 600; color: #d4d4d4; }
+        .section-toggle { font-size: 10px; color: #858585; user-select: none; }
+        .section-content { display: none; padding: 10px; background: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 4px; margin-bottom: 10px; }
+        .section-content.show { display: block; }
         .json-container { background: #1e1e1e; padding: 10px; border-radius: 4px; overflow-x: auto; font-family: "Courier New", monospace; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
         .json-key { color: #9cdcfe; }
         .json-string { color: #ce9178; }
@@ -149,6 +156,18 @@ class DebugHandler(BaseHTTPRequestHandler):
             return days + ' day' + (days > 1 ? 's' : '') + ' ago';
         }
         
+        // Check if JSON is empty
+        function isEmptyJson(obj) {
+            if (!obj) return true;
+            if (typeof obj === 'string') {
+                try { obj = JSON.parse(obj); } catch(e) { return false; }
+            }
+            if (typeof obj === 'object') {
+                return Object.keys(obj).length === 0;
+            }
+            return false;
+        }
+        
         // Syntax highlight JSON
         function syntaxHighlight(json) {
             if (typeof json !== 'string') {
@@ -183,6 +202,14 @@ class DebugHandler(BaseHTTPRequestHandler):
             document.getElementById('body-' + id).classList.toggle('show');
         }
         
+        function toggleSection(event, sectionId) {
+            event.stopPropagation();
+            const content = document.getElementById(sectionId);
+            const toggle = event.currentTarget.querySelector('.section-toggle');
+            content.classList.toggle('show');
+            toggle.textContent = content.classList.contains('show') ? '▼' : '▶';
+        }
+        
         async function refresh() {
             try {
                 const [history, vars, server] = await Promise.all([
@@ -211,9 +238,15 @@ class DebugHandler(BaseHTTPRequestHandler):
                     if (history.length === 0) {
                         reqList.innerHTML = '<div class="empty">No requests yet</div>';
                     } else {
-                        reqList.innerHTML = history.reverse().map((req, i) => `
+                        // Reverse once for display (newest first)
+                        const reversed = history.slice().reverse();
+                        reqList.innerHTML = reversed.map((req, i) => {
+                            // Use actual index from original array
+                            const actualIndex = history.length - 1 - i;
+                            const isLatest = i === 0;
+                            return `
                             <div class="req-item">
-                                <div class="req-header" onclick="toggleReq(${i})">
+                                <div class="req-header" onclick="toggleReq(${actualIndex})">
                                     <div>
                                         <span class="method ${req.method}">${req.method}</span>
                                         <span>${req.path}</span>
@@ -224,20 +257,49 @@ class DebugHandler(BaseHTTPRequestHandler):
                                         <span style="margin-left: 10px; font-size: 11px; color: #858585">${req.elapsed_ms}ms</span>
                                     </div>
                                 </div>
-                                <div class="req-body" id="body-${i}">
-                                    <div style="margin-bottom: 10px"><strong>Response:</strong></div>
-                                    <div class="json-container" id="json-${i}"></div>
+                                <div class="req-body${isLatest ? ' show' : ''}" id="body-${actualIndex}">
+                                    ${!isEmptyJson(req.request_body) ? `
+                                    <div class="section">
+                                        <div class="section-header" onclick="toggleSection(event, 'req-body-${actualIndex}')">
+                                            <span class="section-title">Request Body</span>
+                                            <span class="section-toggle">${isLatest ? '▼' : '▶'}</span>
+                                        </div>
+                                        <div class="section-content${isLatest ? ' show' : ''}" id="req-body-${actualIndex}">
+                                            <div class="json-container">${syntaxHighlight(req.request_body)}</div>
+                                        </div>
+                                    </div>` : ''}
+                                    ${!isEmptyJson(req.request_params) ? `
+                                    <div class="section">
+                                        <div class="section-header" onclick="toggleSection(event, 'req-params-${actualIndex}')">
+                                            <span class="section-title">Request Params</span>
+                                            <span class="section-toggle">${isLatest ? '▼' : '▶'}</span>
+                                        </div>
+                                        <div class="section-content${isLatest ? ' show' : ''}" id="req-params-${actualIndex}">
+                                            <div class="json-container">${syntaxHighlight(req.request_params)}</div>
+                                        </div>
+                                    </div>` : ''}
+                                    ${!isEmptyJson(req.request_headers) ? `
+                                    <div class="section">
+                                        <div class="section-header" onclick="toggleSection(event, 'req-headers-${actualIndex}')">
+                                            <span class="section-title">Request Headers</span>
+                                            <span class="section-toggle">${isLatest ? '▼' : '▶'}</span>
+                                        </div>
+                                        <div class="section-content${isLatest ? ' show' : ''}" id="req-headers-${actualIndex}">
+                                            <div class="json-container">${syntaxHighlight(req.request_headers)}</div>
+                                        </div>
+                                    </div>` : ''}
+                                    <div class="section">
+                                        <div class="section-header" onclick="toggleSection(event, 'response-${actualIndex}')">
+                                            <span class="section-title">Response</span>
+                                            <span class="section-toggle">${isLatest ? '▼' : '▶'}</span>
+                                        </div>
+                                        <div class="section-content${isLatest ? ' show' : ''}" id="response-${actualIndex}">
+                                            <div class="json-container">${syntaxHighlight(req.response_body)}</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        `).join('');
-                        
-                        // Render JSON with syntax highlighting
-                        history.reverse().forEach((req, i) => {
-                            const container = document.getElementById('json-' + i);
-                            if (container && container.innerHTML === '') {
-                                container.innerHTML = syntaxHighlight(req.response);
-                            }
-                        });
+                        `}).join('');
                     }
                     lastReqCount = history.length;
                 } else {
@@ -280,27 +342,40 @@ def get_free_port():
 
 
 class DebugServer:
-    def __init__(self, var_manager, context_manager):
-        self.port = get_free_port()
+    DEFAULT_PORT = 45133  # Unlikely to conflict with common applications
+    
+    def __init__(self, var_manager, context_manager, custom_port=None):
+        self.port = custom_port or self.DEFAULT_PORT
         DebugHandler.var_manager = var_manager
         DebugHandler.context_manager = context_manager
         self.server = None
         self.thread = None
+        self.failed = False
+        self.error_message = None
     
     def start(self):
-        self.server = HTTPServer(('0.0.0.0', self.port), DebugHandler)
-        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
-        self.thread.start()
-        return self.port
+        try:
+            self.server = HTTPServer(('0.0.0.0', self.port), DebugHandler)
+            self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+            self.thread.start()
+            return self.port
+        except OSError as e:
+            # Port already in use or permission denied
+            self.failed = True
+            self.error_message = f"Port {self.port} already in use or unavailable"
+            return None
     
     @staticmethod
-    def log_request(method, path, status, elapsed_ms, response):
+    def log_request(method, path, status, elapsed_ms, request_body, request_headers, request_params, response_body):
         import time
         DebugHandler.request_history.append({
             'method': method,
             'path': path,
             'status': status,
             'elapsed_ms': elapsed_ms,
-            'response': response,
+            'request_body': request_body,
+            'request_headers': request_headers,
+            'request_params': request_params,
+            'response_body': response_body,
             'timestamp': time.time(),
         })

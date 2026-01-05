@@ -95,7 +95,7 @@ def register_tools(
             ),
             Tool(
                 name="get_server_info",
-                description="Get current server configuration and status. Use this to check which server you're connected to before making requests. Also provides the debug_ui_url where users can view request/response history in a browser.",
+                description="Get current server configuration and status. Use this to check which server you're connected to before making requests. Provides debug_ui_url for browser-based request/response monitoring (default port: 45133). If debug UI fails to start due to port conflict, debug_ui_error will indicate the issue.",
                 inputSchema={"type": "object", "properties": {}},
             ),
             Tool(

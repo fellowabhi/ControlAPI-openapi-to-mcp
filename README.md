@@ -72,7 +72,8 @@ Creates a standalone executable at `dist/controlapi-mcp` (16MB)
       "command": "/path/to/openapi-mcp-adapter/dist/controlapi-mcp",
       "env": {
         "OPENAPI_URL": "http://localhost:8000/openapi.json",
-        "BASE_URL": "http://localhost:8000"
+        "BASE_URL": "http://localhost:8000",
+        "DEBUG_PORT": "45133"
       }
     }
   }
@@ -93,16 +94,19 @@ Creates a standalone executable at `dist/controlapi-mcp` (16MB)
         "OPENAPI_URL": "http://localhost:8000/openapi.json",
         "REFRESH_INTERVAL": "300",
         "PYTHONPATH": "/path/to/project",
-        "BASE_URL": "http://localhost:8000"
+        "BASE_URL": "http://localhost:8000",
+        "DEBUG_PORT": "45133"
       }
     }
   }
 }
 ```
 
-**Optional:** `OPENAPI_URL`, `BASE_URL`, `SERVER_NICKNAME`
+**Optional:** `OPENAPI_URL`, `BASE_URL`, `SERVER_NICKNAME`, `DEBUG_PORT` (default: 45133)
 
 > 💡 **No Configuration Needed:** You can start with no environment variables and configure the server dynamically using the `set_server_config` tool. The AI assistant will guide you through the setup.
+
+> 🔍 **Debug UI:** Access browser-based request/response monitor at `http://localhost:45133` (or custom `DEBUG_PORT`). URL available in `get_server_info` response.
 
 ## Features
 

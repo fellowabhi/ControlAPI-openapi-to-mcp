@@ -107,7 +107,16 @@ class RequestExecutor:
             # Log to debug UI
             try:
                 from debug_server import DebugServer
-                DebugServer.log_request(method.upper(), path, response.status_code, response.elapsed_ms, response.body)
+                DebugServer.log_request(
+                    method=method.upper(),
+                    path=path,
+                    status=response.status_code,
+                    elapsed_ms=response.elapsed_ms,
+                    request_body=body,
+                    request_headers=headers,
+                    request_params=query_params,
+                    response_body=response.body
+                )
             except:
                 pass
             
@@ -124,7 +133,16 @@ class RequestExecutor:
             # Log error to debug UI
             try:
                 from debug_server import DebugServer
-                DebugServer.log_request(method.upper(), path, 0, response.elapsed_ms, response.body)
+                DebugServer.log_request(
+                    method=method.upper(),
+                    path=path,
+                    status=0,
+                    elapsed_ms=response.elapsed_ms,
+                    request_body=body,
+                    request_headers=headers,
+                    request_params=query_params,
+                    response_body=response.body
+                )
             except:
                 pass
             

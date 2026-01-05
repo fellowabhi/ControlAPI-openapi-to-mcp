@@ -18,8 +18,8 @@ case "$OS" in
         BINARY_FILENAME="controlapi-mcp-macos"
         ;;
     *)
-        echo "❌ Unsupported operating system: $OS"
-        echo "Supported: Linux, macOS"
+        echo "❌ Unsupported operating system: $OS" >&2
+        echo "Supported: Linux, macOS" >&2
         exit 1
         ;;
 esac
@@ -57,36 +57,36 @@ NEEDS_DOWNLOAD=false
 
 if [ ! -f "$BINARY_PATH" ] || [ ! -x "$BINARY_PATH" ]; then
     NEEDS_DOWNLOAD=true
-    echo "📥 Binary not found. Downloading ControlAPI-MCP..."
+    echo "📥 Binary not found. Downloading ControlAPI-MCP..." >&2
 elif [ "$LOCAL_VERSION" != "$LATEST_VERSION" ]; then
     NEEDS_DOWNLOAD=true
-    echo "🔄 New version available: $LATEST_VERSION (current: $LOCAL_VERSION)"
-    echo "📥 Downloading update..."
+    echo "🔄 New version available: $LATEST_VERSION (current: $LOCAL_VERSION)" >&2
+    echo "📥 Downloading update..." >&2
 fi
 
 if [ "$NEEDS_DOWNLOAD" = true ]; then
     DOWNLOAD_URL=$(get_latest_release_url)
     
     if [ -z "$DOWNLOAD_URL" ]; then
-        echo "❌ Error: Could not find release download URL for $PLATFORM"
-        echo "Please check: https://github.com/${REPO}/releases"
+        echo "❌ Error: Could not find release download URL for $PLATFORM" >&2
+        echo "Please check: https://github.com/${REPO}/releases" >&2
         exit 1
     fi
     
-    echo "🖥️  Detected platform: $PLATFORM"
+    echo "🖥️  Detected platform: $PLATFORM" >&2
     
     # Download to temporary file first (to avoid "text file busy" error)
     TEMP_PATH="${BINARY_PATH}.tmp"
     
-    if curl -L -o "$TEMP_PATH" "$DOWNLOAD_URL"; then
+    if curl -L -o "$TEMP_PATH" "$DOWNLOAD_URL" 2>&1 | grep -v '^  ' >&2; then
         chmod +x "$TEMP_PATH"
         mv -f "$TEMP_PATH" "$BINARY_PATH"
         echo "$LATEST_VERSION" > "$VERSION_FILE"
-        echo "✅ Downloaded and installed version $LATEST_VERSION"
-        echo "📍 Location: $BINARY_PATH"
+        echo "✅ Downloaded and installed version $LATEST_VERSION" >&2
+        echo "📍 Location: $BINARY_PATH" >&2
     else
         rm -f "$TEMP_PATH"
-        echo "❌ Error: Failed to download binary"
+        echo "❌ Error: Failed to download binary" >&2
         exit 1
     fi
 fi

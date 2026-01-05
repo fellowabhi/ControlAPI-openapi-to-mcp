@@ -73,10 +73,22 @@ async def main():
     var_manager = VariableManager()
     executor = RequestExecutor(var_manager, base_url, context)
     
-    # Start debug server
-    debug = DebugServer(var_manager, context)
+    # Start debug server (with optional custom port from env)
+    import os
+    custom_port = os.getenv('DEBUG_PORT')
+    if custom_port:
+        try:
+            custom_port = int(custom_port)
+        except ValueError:
+            custom_port = None
+    
+    debug = DebugServer(var_manager, context, custom_port)
     debug_port = debug.start()
-    context.debug_url = f"http://localhost:{debug_port}"
+    if debug_port:
+        context.debug_url = f"http://localhost:{debug_port}"
+    else:
+        context.debug_url = None
+        context.debug_error = debug.error_message
     
     server = Server("openapi-mcp")
     register_tools(server, loader, executor, var_manager, context)
