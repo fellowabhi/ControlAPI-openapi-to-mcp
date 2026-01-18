@@ -4,10 +4,10 @@ from dataclasses import asdict
 from mcp.server import Server
 from mcp.types import Tool, TextContent
 
-from openapi_loader import OpenAPILoader
-from request_executor import RequestExecutor
-from variable_manager import VariableManager
-from context_manager import ContextManager
+from .openapi_loader import OpenAPILoader
+from .request_executor import RequestExecutor
+from .variable_manager import VariableManager
+from .context_manager import ContextManager
 
 
 def register_tools(
@@ -291,7 +291,7 @@ def register_tools(
                 context.update_load_status(is_loaded=True, endpoint_count=endpoint_count)
                 
                 # Update executor base URL
-                from main import extract_base_url
+                from .main import extract_base_url
                 new_base_url = extract_base_url(new_url, loader.base_url, new_base or "")
                 executor.base_url = new_base_url.rstrip("/")
                 context.current.base_url = new_base_url

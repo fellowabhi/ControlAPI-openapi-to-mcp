@@ -90,11 +90,11 @@ class OpenAPILoader:
         content = request_body.get("content", {})
         
         # Return the first content type found (usually there's only one)
-        # Priority: form-urlencoded > json > others
-        if "application/x-www-form-urlencoded" in content:
-            return "application/x-www-form-urlencoded"
-        elif "application/json" in content:
+        # Priority: json > form-urlencoded > others
+        if "application/json" in content:
             return "application/json"
+        elif "application/x-www-form-urlencoded" in content:
+            return "application/x-www-form-urlencoded"
         elif content:
             # Return first available content type
             return next(iter(content.keys()))

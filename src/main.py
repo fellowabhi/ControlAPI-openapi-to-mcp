@@ -3,18 +3,22 @@ import os
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
-from openapi_loader import OpenAPILoader
-from variable_manager import VariableManager
-from request_executor import RequestExecutor
-from context_manager import ContextManager
-from tools import register_tools
-from debug_server import DebugServer
+from src.openapi_loader import OpenAPILoader
+from src.variable_manager import VariableManager
+from src.request_executor import RequestExecutor
+from src.context_manager import ContextManager
+from src.tools import register_tools
+from src.debug_server import DebugServer
 
 # Remote debugging support
 if os.getenv("MCP_DEBUG") == "1":
-    import debugpy
-    debugpy.listen(("localhost", 5678))
-    print("Debugger listening on port 5678", flush=True)
+    try:
+        import debugpy
+        debugpy.listen(("localhost", 5679))
+        print("Debugger listening on port 5679", flush=True)
+    except RuntimeError:
+        # Already listening, ignore
+        pass
 
 
 def load_config() -> dict:

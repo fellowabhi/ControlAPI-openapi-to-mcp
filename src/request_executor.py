@@ -4,8 +4,8 @@ import time
 import httpx
 from urllib.parse import urlparse, parse_qs, urlencode
 
-from variable_manager import VariableManager
-from context_manager import ContextManager
+from .variable_manager import VariableManager
+from .context_manager import ContextManager
 
 
 @dataclass
@@ -72,7 +72,7 @@ class RequestExecutor:
             use_form = "application/x-www-form-urlencoded" in content_type
             
             with httpx.Client() as client:
-                if use_form and body:
+                if use_form and body is not None:
                     # Use form encoding
                     resp = client.request(
                         method=method.upper(),
@@ -88,7 +88,7 @@ class RequestExecutor:
                         url=url,
                         headers=headers,
                         params=query_params if query_params else None,
-                        json=body if body else None,
+                        json=body if body is not None else None,
                     )
             elapsed = (time.perf_counter() - start) * 1000
 
@@ -106,7 +106,7 @@ class RequestExecutor:
             
             # Log to debug UI
             try:
-                from debug_server import DebugServer
+                from .debug_server import DebugServer
                 DebugServer.log_request(
                     method=method.upper(),
                     path=path,
@@ -132,7 +132,7 @@ class RequestExecutor:
             
             # Log error to debug UI
             try:
-                from debug_server import DebugServer
+                from .debug_server import DebugServer
                 DebugServer.log_request(
                     method=method.upper(),
                     path=path,
