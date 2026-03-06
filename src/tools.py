@@ -130,7 +130,7 @@ def register_tools(
             ),
             Tool(
                 name="get_server_info",
-                description="Get current server configuration and status. Provides debug_ui_url for browser-based request/response monitoring.",
+                description="Get current server configuration and status. Returns debug_ui_url — if the user asks to open the debug monitor, fetch this then open that URL in their browser.",
                 inputSchema={"type": "object", "properties": {}},
             ),
             Tool(

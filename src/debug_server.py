@@ -354,16 +354,20 @@ class DebugServer:
         self.error_message = None
     
     def start(self):
-        try:
-            self.server = HTTPServer(('0.0.0.0', self.port), DebugHandler)
-            self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
-            self.thread.start()
-            return self.port
-        except OSError as e:
-            # Port already in use or permission denied
-            self.failed = True
-            self.error_message = f"Port {self.port} already in use or unavailable"
-            return None
+        ports_to_try = [self.port, 0]  # 0 = let OS pick a free port
+        for port in ports_to_try:
+            try:
+                self.server = HTTPServer(('0.0.0.0', port), DebugHandler)
+                actual_port = self.server.server_address[1]
+                self.port = actual_port
+                self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+                self.thread.start()
+                return actual_port
+            except OSError:
+                continue
+        self.failed = True
+        self.error_message = "Could not bind to any port for debug monitor"
+        return None
     
     @staticmethod
     def log_request(method, path, status, elapsed_ms, request_body, request_headers, request_params, response_body):
