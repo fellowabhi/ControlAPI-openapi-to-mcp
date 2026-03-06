@@ -379,3 +379,23 @@ class DebugServer:
             'response_body': response_body,
             'timestamp': time.time(),
         })
+
+    @staticmethod
+    def get_last_response() -> dict | None:
+        """Get the most recent request+response from history."""
+        if DebugHandler.request_history:
+            return DebugHandler.request_history[-1]
+        return None
+
+    @staticmethod
+    def get_response(index: int = -1) -> dict | None:
+        """Get a specific request+response from history by index."""
+        try:
+            return DebugHandler.request_history[index]
+        except (IndexError, TypeError):
+            return None
+
+    @staticmethod
+    def get_history_count() -> int:
+        """Get the total number of stored requests."""
+        return len(DebugHandler.request_history)

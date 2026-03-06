@@ -108,12 +108,16 @@ class OpenAPILoader:
         return None
 
     def search_endpoints(self, query: str) -> List[Endpoint]:
-        query = query.lower()
+        # Split query into words and search for any match
+        words = query.lower().split()
         results = []
         for ep in self.get_endpoints():
-            if (query in ep.path.lower() or 
-                query in ep.summary.lower() or 
-                query in ep.description.lower() or
-                any(query in t.lower() for t in ep.tags)):
-                results.append(ep)
+            # Check if any word matches path, summary, description, or tags
+            for word in words:
+                if (word in ep.path.lower() or 
+                    word in ep.summary.lower() or 
+                    word in ep.description.lower() or
+                    any(word in t.lower() for t in ep.tags)):
+                    results.append(ep)
+                    break  # Don't add the same endpoint multiple times
         return results

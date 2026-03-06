@@ -32,10 +32,24 @@ def load_config() -> dict:
     }
 
 
-def extract_base_url(openapi_url: str, loader_base_url: str, config_base_url: str) -> str:
+def extract_base_url(openapi_url: str, loader_base_url: str, config_base_url: str, endpoint_paths: list = None) -> str:
     if config_base_url:
         return config_base_url
     if loader_base_url:
+        from urllib.parse import urlparse
+        parsed = urlparse(loader_base_url)
+        server_path = parsed.path.rstrip("/")
+        # Detect double-path: servers[0].url has a path prefix (e.g. /api/v1)
+        # but endpoint paths in the spec also start with that same prefix.
+        # This is a common DRF / drf-spectacular pattern where the spec is misconfigured.
+        # Fix: use just the origin so paths resolve correctly.
+        if server_path and server_path != "/" and endpoint_paths:
+            duplicate = any(
+                p == server_path or p.startswith(server_path + "/")
+                for p in endpoint_paths[:10]
+            )
+            if duplicate:
+                return f"{parsed.scheme}://{parsed.netloc}"
         return loader_base_url
     from urllib.parse import urlparse
     parsed = urlparse(openapi_url)
@@ -66,13 +80,17 @@ async def main():
             load_error=loader.load_error if not loader.loaded else None
         )
         
-        base_url = extract_base_url(config["openapi_url"], loader.base_url, config["base_url"])
+        endpoint_paths = [e.path for e in loader.get_endpoints()[:10]] if loader.loaded else []
+        base_url = extract_base_url(config["openapi_url"], loader.base_url, config["base_url"], endpoint_paths)
+        # Update context with the actual resolved base_url
+        context.current.base_url = base_url
     else:
         # No initial config - start with empty loader
         loader = OpenAPILoader("not-configured")
         loader.loaded = False
         loader.load_error = "No server configured. Use set_server_config to connect to an API."
-        base_url = "http://localhost:8000"
+        base_url = ""
+        context.current.base_url = base_url
     
     var_manager = VariableManager()
     executor = RequestExecutor(var_manager, base_url, context)
