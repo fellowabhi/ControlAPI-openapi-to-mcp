@@ -57,14 +57,21 @@ class DebugHandler(BaseHTTPRequestHandler):
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1e1e1e; color: #d4d4d4; }
-        .header { background: #252526; padding: 15px 20px; border-bottom: 1px solid #3c3c3c; }
-        .header h1 { font-size: 16px; font-weight: 500; }
-        .server-info { background: #2d2d30; padding: 10px 20px; font-size: 12px; border-bottom: 1px solid #3c3c3c; }
-        .server-info span { margin-right: 20px; }
-        .container { display: flex; height: calc(100vh - 90px); }
-        .sidebar { width: 250px; background: #252526; border-right: 1px solid #3c3c3c; overflow-y: auto; }
+        .header { background: #252526; padding: 12px 20px; border-bottom: 1px solid #3c3c3c; display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 16px; font-weight: 500; flex: 1; }
+        .toggle-btn { background: none; border: 1px solid #3c3c3c; color: #d4d4d4; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 14px; line-height: 1; }
+        .toggle-btn:hover { background: #3c3c3c; }
+        .server-info { background: #2d2d30; padding: 8px 20px; font-size: 12px; border-bottom: 1px solid #3c3c3c; display: flex; flex-wrap: wrap; gap: 6px 20px; }
+        .server-info .info-item { display: flex; gap: 5px; }
+        .info-label { color: #858585; }
+        .info-value { color: #d4d4d4; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .info-value.ok { color: #4caf50; }
+        .info-value.err { color: #f44336; }
+        .container { display: flex; height: calc(100vh - 85px); }
+        .sidebar { width: 160px; min-width: 160px; background: #252526; border-right: 1px solid #3c3c3c; overflow-y: auto; transition: width 0.2s, min-width 0.2s; }
+        .sidebar.collapsed { width: 0; min-width: 0; overflow: hidden; border-right: none; }
         .main { flex: 1; overflow-y: auto; padding: 20px; }
-        .tab { padding: 10px 15px; cursor: pointer; border-left: 3px solid transparent; font-size: 13px; }
+        .tab { padding: 10px 15px; cursor: pointer; border-left: 3px solid transparent; font-size: 13px; white-space: nowrap; }
         .tab:hover { background: #2a2d2e; }
         .tab.active { background: #37373d; border-left-color: #007acc; }
         .req-item { background: #2d2d30; margin-bottom: 10px; border-radius: 4px; overflow: hidden; border: 1px solid #3c3c3c; }
@@ -106,15 +113,19 @@ class DebugHandler(BaseHTTPRequestHandler):
 </head>
 <body>
     <div class="header">
+        <button class="toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">&#9776;</button>
         <h1>&#128269; ControlAPI MCP Debug Console</h1>
     </div>
     <div class="server-info">
-        <span id="serverName">Server: -</span>
-        <span id="serverUrl">URL: -</span>
-        <span id="endpoints">Endpoints: 0</span>
+        <div class="info-item"><span class="info-label">Server:</span><span class="info-value" id="serverName">-</span></div>
+        <div class="info-item"><span class="info-label">Base URL:</span><span class="info-value" id="baseUrl">-</span></div>
+        <div class="info-item"><span class="info-label">Schema:</span><span class="info-value" id="serverUrl">-</span></div>
+        <div class="info-item"><span class="info-label">Endpoints:</span><span class="info-value" id="endpoints">0</span></div>
+        <div class="info-item"><span class="info-label">Status:</span><span class="info-value" id="loadStatus">-</span></div>
+        <div class="info-item"><span class="info-label">Last req:</span><span class="info-value" id="lastReq">-</span></div>
     </div>
     <div class="container">
-        <div class="sidebar">
+        <div class="sidebar collapsed" id="sidebar">
             <div class="tab active" onclick="showTab('requests')">&#128225; Requests</div>
             <div class="tab" onclick="showTab('variables')">&#128274; Variables</div>
         </div>
@@ -143,6 +154,10 @@ class DebugHandler(BaseHTTPRequestHandler):
     </div>
     <script>
         let lastReqCount = 0;
+        
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
         
         // Get relative time
         function getRelativeTime(timestamp) {
@@ -219,9 +234,28 @@ class DebugHandler(BaseHTTPRequestHandler):
                 ]);
                 
                 // Update server info (no DOM rebuild)
-                document.getElementById('serverName').textContent = 'Server: ' + (server.nickname || '-');
-                document.getElementById('serverUrl').textContent = 'URL: ' + (server.openapi_url || '-');
-                document.getElementById('endpoints').textContent = 'Endpoints: ' + (server.endpoint_count || 0);
+                document.getElementById('serverName').textContent = server.nickname || '-';
+                document.getElementById('baseUrl').textContent = server.base_url || '-';
+                document.getElementById('serverUrl').textContent = server.openapi_url || '-';
+                document.getElementById('endpoints').textContent = server.endpoint_count || 0;
+                const statusEl = document.getElementById('loadStatus');
+                if (server.is_loaded) {
+                    statusEl.textContent = 'Loaded';
+                    statusEl.className = 'info-value ok';
+                } else if (server.load_error) {
+                    statusEl.textContent = server.load_error;
+                    statusEl.className = 'info-value err';
+                } else {
+                    statusEl.textContent = 'Not configured';
+                    statusEl.className = 'info-value';
+                }
+                const lastReqEl = document.getElementById('lastReq');
+                if (server.last_request_at) {
+                    const d = new Date(server.last_request_at);
+                    lastReqEl.textContent = (server.last_request_method || '') + ' ' + (server.last_request_path || '') + ' · ' + d.toLocaleTimeString();
+                } else {
+                    lastReqEl.textContent = '-';
+                }
                 
                 // Update stats (no DOM rebuild)
                 const total = history.length;

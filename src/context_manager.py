@@ -62,7 +62,6 @@ class ContextManager:
             nickname=nickname,
         )
         self._pending_first_request = True
-        self.debug_url: Optional[str] = None
         self.debug_error: Optional[str] = None
     
     def update_load_status(self, is_loaded: bool, endpoint_count: int = 0, load_error: Optional[str] = None):

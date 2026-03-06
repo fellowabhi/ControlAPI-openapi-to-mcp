@@ -42,7 +42,7 @@ def register_tools(
             ),
             Tool(
                 name="execute_request",
-                description="Execute HTTP requests to API endpoints. Returns compact response by default (no headers, no server_context). Use include_headers/include_server_context for full details. Supports JSONPath filtering on response body via jsonpath param. Full unfiltered response is always cached — use replay_response to re-inspect without re-executing.",
+                description="Execute HTTP requests to API endpoints. Returns compact response by default (no headers, no server_context). Use include_headers/include_server_context for full details. Full unfiltered response is always cached — use replay_response to re-inspect without re-executing. PREFERRED: If you know or can predict the response structure, always pass a jsonpath param to extract only the needed fields — this saves tokens and avoids re-execution. e.g. jsonpath='$.data.access_token' to get a token, '$.results' for a list. Root $ = response body directly.",
                 inputSchema={
                     "type": "object",
                     "properties": {
