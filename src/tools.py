@@ -51,7 +51,7 @@ def register_tools(
                         "path_params": {"type": "object", "description": "Path parameters"},
                         "query_params": {"type": "object", "description": "Query parameters"},
                         "headers": {"type": "object", "description": "Request headers"},
-                        "body": {"type": "object", "description": "Request body as JSON object"},
+                        "body": {"description": "Request body — JSON object {} or array [] depending on the endpoint"},
                         "include_headers": {"type": "boolean", "description": "Include response headers (default: false)", "default": False},
                         "include_server_context": {"type": "boolean", "description": "Include server context in response (default: false)", "default": False},
                         "jsonpath": {"type": "string", "description": "JSONPath to filter the response body directly. Root $ = body root. e.g. '$.data.access_token' not '$.body.data.access_token'"},
