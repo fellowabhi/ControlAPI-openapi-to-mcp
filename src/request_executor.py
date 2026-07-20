@@ -7,6 +7,22 @@ from urllib.parse import urlparse, parse_qs, urlencode
 from .variable_manager import VariableManager
 from .context_manager import ContextManager
 
+SENSITIVE_HEADER_NAMES = frozenset({
+    "authorization",
+    "cookie",
+    "proxy-authorization",
+    "set-cookie",
+    "x-api-key",
+    "xquik-api-key",
+})
+
+
+def redact_sensitive_headers(headers: dict) -> dict:
+    return {
+        key: "[REDACTED]" if str(key).lower() in SENSITIVE_HEADER_NAMES else value
+        for key, value in headers.items()
+    }
+
 
 @dataclass
 class Response:
@@ -113,7 +129,7 @@ class RequestExecutor:
                     status=response.status_code,
                     elapsed_ms=response.elapsed_ms,
                     request_body=body,
-                    request_headers=headers,
+                    request_headers=redact_sensitive_headers(headers),
                     request_params=query_params,
                     response_body=response.body
                 )
@@ -139,7 +155,7 @@ class RequestExecutor:
                     status=0,
                     elapsed_ms=response.elapsed_ms,
                     request_body=body,
-                    request_headers=headers,
+                    request_headers=redact_sensitive_headers(headers),
                     request_params=query_params,
                     response_body=response.body
                 )
