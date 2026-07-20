@@ -153,3 +153,52 @@ Use `{{variable_name}}` in headers, body, or path:
 3. `set_variable` key="token" value="Bearer xyz..."
 4. `execute_request` with `Authorization: {{token}}`
 5. **Switch servers:** `set_server_config` to test on different environment
+
+## Xquik OpenAPI to MCP
+
+ControlAPI can expose Xquik's documented REST operations as MCP tools without
+claiming that the Xquik platform itself is open source.
+
+Connect ControlAPI with `set_server_config`:
+
+```json
+{
+  "openapi_url": "https://xquik.com/openapi.json",
+  "base_url": "https://xquik.com",
+  "nickname": "Xquik"
+}
+```
+
+Store the API key for request substitution:
+
+```json
+{
+  "key": "xquik_api_key",
+  "value": "<your Xquik API key>"
+}
+```
+
+Then call a read operation through `execute_request`:
+
+```json
+{
+  "path": "/api/v1/x/tweets/search",
+  "method": "GET",
+  "headers": {
+    "x-api-key": "{{xquik_api_key}}"
+  },
+  "query_params": {
+    "q": "agent research",
+    "limit": 20
+  }
+}
+```
+
+Keep keys out of committed configuration and shared logs. ControlAPI redacts
+credential-bearing headers from its debug history.
+
+- Xquik docs: <https://docs.xquik.com>
+- Xquik OpenAPI: <https://xquik.com/openapi.json>
+
+Xquik is an independent third-party service. Not affiliated with X Corp.
+"Twitter" and "X" are trademarks of X Corp.
